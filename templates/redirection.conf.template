@@ -1,0 +1,26 @@
+server {
+  listen ${PORT};
+  server_name localhost;
+
+  rewrite_log on;
+
+  location / {
+    # Big credit to https://serverfault.com/questions/874637/nginx-reverse-proxy-with-query-parameter-modification
+
+    if ($args ~* (.*)redirect_uri=https%3A%2F%2F([^%]+)%2([^&]+)(.*)) {
+      set $redirect_uri "https%3A%2F%2F$2%2$3";
+      set $args $1redirect_uri=https%3A%2F%2F$host$3$4;
+    }
+
+    if ($args ~* (.*)state=(\w*)(.*)) {
+      set $args $1state=$redirect_uri$2$3;
+      #rewrite ^.* $1 redirect;
+    }
+
+    rewrite ^\/github.com\/login https://github.com/login;
+ 
+    #rewrite ^(\/foo) http://example.com/bar;
+    #rewrite ^\/bar\/baz?(.*)&foo=(.*) http://example.com/bar/baz?$1&foo=$2;
+    #rewrite ^(\/github\.com\/login.*)&return_to=(.*)&(.*)&state=(.*) https://$1&return_to=$2&$3&state=foo_$4;
+  }
+}
